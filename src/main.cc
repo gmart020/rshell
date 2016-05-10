@@ -17,4 +17,6 @@ int main(){
 		REPEAT = false;	
 	}
   }
+  
+  return 0;
 }
