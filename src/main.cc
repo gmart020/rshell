@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <unistd.h>
+using namespace std;
 
 int main(){
   char HOSTNAME[128];
@@ -12,6 +13,8 @@ int main(){
     cout << getlogin() << "@" << HOSTNAME << "$ ";
     getline(cin, input);
     
-    cout << input << endl;
+    if (input == "exit"){
+		REPEAT = false;	
+	}
   }
 }
