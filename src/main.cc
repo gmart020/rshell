@@ -14,4 +14,6 @@ int main(){
     
     cout << input << endl;
   }
+  
+  return 0;
 }
