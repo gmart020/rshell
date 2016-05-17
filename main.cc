@@ -31,14 +31,15 @@ int main(){
         
         for (unsigned j = 0; j < i.size(); ++j){
             if (j == i.size() - 1){
-                w.push_back(i.at(j));
+                if(i.at(j)!='\"') w.push_back(i.at(j));
                 word.push_back(w);
                 comm.push_back(word);
             }
             else{
                 if (quote){ //In quotes
-                    if ((i.at(j) == '\"' && i.at(j - 1) != '\\') || j == i.size() - 1){
-                        w.push_back(i.at(j));
+                   // if ((i.at(j) == '\"' && i.at(j - 1) != '\\') || j == i.size() - 1){
+                    if(i.at(j) == '\"' && i.at(j-1) != '\\'){
+                       // w.push_back(i.at(j));
                         word.push_back(w);
                         w.clear();
                         quote = !quote;
@@ -50,6 +51,7 @@ int main(){
                 else{ //Not in quotes
                     if (i.at(j) == '\"'){
                         quote = !quote;
+                        j++;
                         w.push_back(i.at(j));
                     }
                     else if (i.at(j) == ';'){
