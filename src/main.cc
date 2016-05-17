@@ -104,10 +104,9 @@ int main(){
                     //If a # is found outside of quotes, stops parsing process and
                     //begins execution.
                     else if (i.at(j) == '#'){
-                        if (!(w.empty())){
-                            word.push_back(w);
-                        }
-                        break;
+                        word.push_back(w);
+                        comm.push_back(word);
+                        j = i.size();
                     }
                     else{
                         w.push_back(i.at(j));
