@@ -19,17 +19,24 @@ int main(){
     char HOSTNAME[128];
     gethostname(HOSTNAME, sizeof HOSTNAME);
     
+    //Loop will only break if the user enters 'exit' in the inputted command.
     while (1){
         string i;
         cout << getlogin() << "@" << HOSTNAME << "$ ";
         getline(cin, i);
-        
         string w = "";
-        vector <string> word;
-        vector< vector<string> > comm;
-        bool quote = false;
+        vector <string> word; //This will an individual command after parsing. 
+        vector< vector<string> > comm; //After parsing this will hold commands in the order they were inputed.
+        bool quote = false; 
         
+        /* This for loop will iterate through the inputed string and separate commands
+           by the connectors. When a connector is found vector word which holds a 
+           single command will be pushed back into vector comm which will eventually
+           hold all the concatenated commands. After word is pushed back, the 
+           appropriate connector will be pushed into comm as well.
+        */
         for (unsigned j = 0; j < i.size(); ++j){
+            //If the end is reached pushes data into comm.
             if (j == i.size() - 1){
                 if(i.at(j)!='\"') w.push_back(i.at(j));
                 word.push_back(w);
@@ -54,6 +61,7 @@ int main(){
                         j++;
                         w.push_back(i.at(j));
                     }
+                    //If semicolon is found push created vector into com.
                     else if (i.at(j) == ';'){
                         word.push_back(w);
                         comm.push_back(word);
@@ -64,6 +72,7 @@ int main(){
                         word.clear();
                         w.clear();
                     }
+                    //If && is found push created vector into com.
                     else if ((i.at(j) == '&' && i.at(j + 1) == '&')){
                         comm.push_back(word);
                         word.clear();
@@ -74,6 +83,7 @@ int main(){
                         w.clear();
                         j+=1;
                     }
+                    //If || is found push created vector into com.
                     else if ((i.at(j) == '|' && i.at(j + 1) == '|')){
                         comm.push_back(word);
                         word.clear();
@@ -84,12 +94,15 @@ int main(){
                         w.clear();
                         j+=1;
                     }
+                    //If a space is found push created word into word.
                     else if (i.at(j) == ' '){
                         if (!(w.empty())){
                             word.push_back(w);
                             w.clear();
                         }
                     }
+                    //If a # is found outside of quotes, stops parsing process and
+                    //begins execution.
                     else if (i.at(j) == '#'){
                         if (!(w.empty())){
                             word.push_back(w);
@@ -102,30 +115,23 @@ int main(){
                 }
             }
         }
-            
-        // for (unsigned l = 0; l < comm.size(); ++l){
-        //     for (unsigned m = 0; m < comm.at(l).size(); ++m){
-        //         cout << comm.at(l).at(m) << " ";
-        //     }
-        //     cout << endl;
-        // }
         
-        bool didItExecute = true;
-        bool shouldItExecute = true;
-       
-        for (unsigned first = 0; first < comm.size(); first++){
-            for (unsigned second = 0; second < comm.at(first).size(); second++){
-                if (comm.at(first).at(second) == "exit"){
-                    exit(0);
-                }
-            }
-        }
+        bool didItExecute = true; //Checks if the current command executed or not.
+        bool shouldItExecute = true; //Determines if the current command should execute or not.
         
+        //Commands are executed here.
         for (unsigned j = 0; j < comm.size(); ++j){
-            if (comm.at(j).size() == 1 && comm.at(j).at(0) == ";"){
+            //If command is exit, execution is stopped and outer while loop restarts.
+            if (comm.at(j).size() == 1 && comm.at(j).at(0) == "exit"){
+                exit(0);
+            }
+            //If a semicolon is found, automatically set shouldItExecute to true
+            //so next command will execute.
+            else if (comm.at(j).size() == 1 && comm.at(j).at(0) == ";"){
                 shouldItExecute = true;
             }
-            
+            //If || is found checks didItExecute to see if previous command executed.
+            //If it did it will set shouldItExecute to false, true otherwise.
             else if (comm.at(j).size() == 1 && comm.at(j).at(0) == "||"){
                 if (didItExecute){
                     shouldItExecute = false;
@@ -134,7 +140,8 @@ int main(){
                     shouldItExecute = true;
                 }
             }
-            
+            //If && is found checks didItExecute to see if previous command executed.
+            //If it did it will set shouldItExecute to true, false otherwise.
             else if (comm.at(j).size() == 1 && comm.at(j).at(0) == "&&"){
                 if (didItExecute){
                     shouldItExecute = true;
@@ -143,47 +150,43 @@ int main(){
                     shouldItExecute = false;
                 }
             }
-            
             else{
                 unsigned size = comm.at(j).size() + 1;
-                char**args = new char*[size];
-        
+                char**args = new char*[size]; //Creates args of type char** which will be inputed to execvp.
+                args[size - 1] = 0;
+                //stores each command in comm into char to beable to be executed.
                 for (unsigned i = 0; i < size - 1; ++i){
                     const char *mystr = comm.at(j).at(i).c_str();
                     args[i] = const_cast<char *> (&mystr[0]);
                 }
-    
-                args[size - 1] = 0;
-                
+                //If shouldItExecute is true, which would be set by the connectors
+                //above, then the current command is executed.
                 if (shouldItExecute){
                     int status;
-                    pid_t c_pid, pid; // Where c_pid is child
-                    c_pid = fork();
-                    if (c_pid < 0)
+                    pid_t pid;
+                    pid = fork(); //Forks a child process.
+                    if (pid < 0) //Fork failed, exits program.
                     {
-                        perror("fork failed");
+                        perror("Fork Failed");
                         exit(1);
                     }
-                    else if (c_pid == 0) // Child process
+                    else if (pid == 0) //Fork is successful.
                     {
-                        execvp(args[0], args);
-                        perror("-bash");
-                        exit(1);
-                    }
-                    else if (c_pid > 0)
-                    {
-                        if ( (pid = wait(&status)) < 0)
-                        {
-                            perror("wait");
-                            exit(1);
-                        }
-                        
-                        if (WEXITSTATUS(status) != 0){
-                            didItExecute = false;
+                        if (execvp(args[0], args) < 0){ //executes the command.
+                            perror("-bash"); //Execution failed if it takes this branch.
+                            didItExecute = false; //Update execution information for following commands.
                         }
                         else{
-                            didItExecute = true;
+                            didItExecute = true; //Execution successful. Updates execution info.
                         }
+                    }
+                    else
+                    {   //Makes the parent wait until child process completes.
+                        while ( wait(&status) != pid)
+                        {
+                            perror("wait");
+                        }
+                        didItExecute = true;
                         delete [] args;
                     }   
                 }
