@@ -112,13 +112,17 @@ int main(){
         
         bool didItExecute = true;
         bool shouldItExecute = true;
+       
+        for (unsigned first = 0; first < comm.size(); first++){
+            for (unsigned second = 0; second < comm.at(first).size(); second++){
+                if (comm.at(first).at(second) == "exit"){
+                    exit(0);
+                }
+            }
+        }
         
         for (unsigned j = 0; j < comm.size(); ++j){
-            if (comm.at(j).size() == 1 && comm.at(j).at(0) == "exit"){
-                exit(0);
-            }
-            
-            else if (comm.at(j).size() == 1 && comm.at(j).at(0) == ";"){
+            if (comm.at(j).size() == 1 && comm.at(j).at(0) == ";"){
                 shouldItExecute = true;
             }
             
