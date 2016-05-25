@@ -16,22 +16,25 @@ using namespace std;
 
 class connector
 {
-	public:
-		connector* left;
-		connector* right;
-		bool successful;
+    public:
+        connector* left;
+        connector* right;
+        bool successful;
     
-	public:
-    	connector(){
-			successful = true;
-		}
-    	virtual bool evaluate() = 0;
-		void addLeft(connector *c){
-			left = c;
-		}
-		void addRight(connector *c){
-			right = c;
-		}
+    public:
+        connector()
+        {
+            successful = true;
+        }
+        virtual bool evaluate() = 0;
+        void addLeft(connector* c)
+        {
+            left = c;
+        }
+        void addRight(connector* c)
+	{	
+            right = c;
+        }
 };
 
 class ampersand: public connector
@@ -87,7 +90,7 @@ class always: public connector
 
     bool evaluate()
     {
-		left->evaluate();
+        left->evaluate();
         // bool something=left->evaluate();
         if(right->evaluate())
         {
@@ -101,54 +104,63 @@ class always: public connector
 class commands: public connector
 {
     public:
-	string command;
-    commands(string &com){
-		left = NULL;
-		right = NULL;
-		command = com;		
+        string command;
+        commands(string &com)
+	{
+	    left = NULL;
+	    right = NULL;
+	    command = com;		
 	}
 
     bool evaluate()
     {
         //execvp goes here
         typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
-		boost::char_separator<char> sep(" ");
-		tokenizer tokens(command, sep);
-		vector<string> v;
-		for (tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter){
-			v.push_back(*tok_iter);
-		}
-		unsigned size = v.size() + 1;
+	boost::char_separator<char> sep(" ");
+	tokenizer tokens(command, sep);
+	vector<string> v;
+	for (tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter)
+	{
+	    v.push_back(*tok_iter);
+	}
+	unsigned size = v.size() + 1;
         char **args = new char*[size];
-		args[size - 1] = 0;
+	args[size - 1] = 0;
 
-		for (unsigned i = 0; i < size - 1; ++i){
-			const char *mystr = v.at(i).c_str();
-			args[i] = const_cast<char *> (&mystr[0]);
-		}
+	for (unsigned i = 0; i < size - 1; ++i)
+	{
+	    const char *mystr = v.at(i).c_str();
+	    args[i] = const_cast<char *> (&mystr[0]);
+	}
 
-		int status;
-		pid_t pid;
-		pid = fork();
-		if (pid < 0){
-			perror("Fork Failed");
-			successful = false;
-		}
-		else if(pid == 0){
-			if (execvp(args[0], args) < 0){
-				perror("-bash");
-				successful =  false;
-			}
-			else{
-				successful = true;
-			}
-		}
-		else{
-			while (wait(&status) != pid){
-				perror("wait");
-			}
-			successful = true;
-		}
+	int status;
+	pid_t pid;
+	pid = fork();
+	if (pid < 0)
+	{
+	    perror("Fork Failed");
+	    successful = false;
+	}
+	else if(pid == 0)
+	{
+	    if (execvp(args[0], args) < 0)
+	    {
+		perror("-bash");
+		successful =  false;
+	    }
+	    else
+	    {
+		successful = true;
+	    }
+	}
+	else
+	{
+	    while (wait(&status) != pid)
+	    {
+		perror("wait");
+	    }
+	    successful = true;
+	}
         return successful;
     }
 };
