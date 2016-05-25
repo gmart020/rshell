@@ -1,27 +1,51 @@
+#ifndef CLASS_H
+#define CLASS_H
+
+#include <iostream>
+#include <vector>
+#include <string.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <boost/tokenizer.hpp>
+
 using namespace std;
 
 class connector
 {
-    public:
-    connector();
-    connector* left;
-    connector* right;
-    bool successful=false; //did commands execute
-    virtual bool evaluate();
+	public:
+		connector* left;
+		connector* right;
+		bool successful;
+    
+	public:
+    	connector(){
+			successful = true;
+		}
+    	virtual bool evaluate() = 0;
+		void addLeft(connector *c){
+			left = c;
+		}
+		void addRight(connector *c){
+			right = c;
+		}
 };
 
 class ampersand: public connector
 {
     public:
-    ampersand();
+    ampersand(){};
 
     bool evaluate()
     {
         bool doleft=left->evaluate();
-       
+       	bool doright;
         if(doleft)
         {
-            bool doright=right->evaluate();
+            doright=right->evaluate();
         }
 
         if(doright)
@@ -36,15 +60,15 @@ class ampersand: public connector
 class pipe: public connector
 {
     public:
-    pipe();
+    pipe(){};
 
     bool evaluate()
     {
         bool doleft=left->evaluate();
-       
+        bool doright;
         if(!doleft)
         {
-            bool doright=right->evaluate();
+            doright=right->evaluate();
         }
 
         if(doright || doleft)
@@ -59,11 +83,12 @@ class pipe: public connector
 class always: public connector
 {
     public:
-    always();
+    always(){};
 
     bool evaluate()
     {
-        bool something=left->evaluate();
+		left->evaluate();
+        // bool something=left->evaluate();
         if(right->evaluate())
         {
             successful = true;
@@ -76,12 +101,56 @@ class always: public connector
 class commands: public connector
 {
     public:
-    commands();
-    string args;
+	string command;
+    commands(string &com){
+		left = NULL;
+		right = NULL;
+		command = com;		
+	}
 
     bool evaluate()
     {
         //execvp goes here
+        typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+		boost::char_separator<char> sep(" ");
+		tokenizer tokens(command, sep);
+		vector<string> v;
+		for (tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter){
+			v.push_back(*tok_iter);
+		}
+		unsigned size = v.size() + 1;
+        char **args = new char*[size];
+		args[size - 1] = 0;
+
+		for (unsigned i = 0; i < size - 1; ++i){
+			const char *mystr = v.at(i).c_str();
+			args[i] = const_cast<char *> (&mystr[0]);
+		}
+
+		int status;
+		pid_t pid;
+		pid = fork();
+		if (pid < 0){
+			perror("Fork Failed");
+			successful = false;
+		}
+		else if(pid == 0){
+			if (execvp(args[0], args) < 0){
+				perror("-bash");
+				successful =  false;
+			}
+			else{
+				successful = true;
+			}
+		}
+		else{
+			while (wait(&status) != pid){
+				perror("wait");
+			}
+			successful = true;
+		}
         return successful;
     }
 };
+
+#endif
