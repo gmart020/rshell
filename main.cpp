@@ -11,8 +11,21 @@
 #include "class.h"
 using namespace std;
 
+connector parse(string input)
+{
+    
+
+    
+}
+
 int main()
 {
-
+    string inputs;
+    
+    while(getline(cin, inputs))
+    {
+        connector *toexecute=parse(inputs);
+        toexecute->evaluate();
+    }
 
 }

@@ -16,7 +16,7 @@ using namespace std;
 
 class connector
 {
-    public:
+    private:
         connector* left;
         connector* right;
         bool successful;
@@ -40,12 +40,15 @@ class connector
 class ampersand: public connector
 {
     public:
-    ampersand(){};
+    ampersand() : connector()
+    {
+        //constructor
+    }
 
     bool evaluate()
     {
         bool doleft=left->evaluate();
-       	bool doright;
+       	bool doright=false;
         if(doleft)
         {
             doright=right->evaluate();
@@ -63,7 +66,10 @@ class ampersand: public connector
 class pipe: public connector
 {
     public:
-    pipe(){};
+    pipe() : connector()
+    {
+        //constructor
+    }
 
     bool evaluate()
     {
@@ -86,7 +92,9 @@ class pipe: public connector
 class always: public connector
 {
     public:
-    always(){};
+    always() : connector()
+    {
+    }
 
     bool evaluate()
     {
