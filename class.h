@@ -24,7 +24,7 @@ class connector
     public:
         connector()
         {
-            successful = true;
+            successful = false;
         }
         virtual bool evaluate() = 0;
         void addLeft(connector* c)
@@ -90,7 +90,7 @@ class always: public connector
 
     bool evaluate()
     {
-        left->evaluate();
+        bool doleft=left->evaluate();
         // bool something=left->evaluate();
         if(right->evaluate())
         {
