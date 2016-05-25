@@ -35,6 +35,14 @@ class connector
 	{	
             right = c;
         }
+        void success()
+        {
+            successful=true;
+        }
+        void failure()
+        {
+            successful=false;
+        }
 };
 
 class ampersand: public connector
@@ -56,7 +64,7 @@ class ampersand: public connector
 
         if(doright)
         {
-            successful=true;
+            success();
         }
 
         return successful;
@@ -82,7 +90,7 @@ class pipe: public connector
 
         if(doright || doleft)
         {
-            successful=true;
+            success();
         }
 
         return successful;
@@ -94,6 +102,7 @@ class always: public connector
     public:
     always() : connector()
     {
+        //constructful = true;or
     }
 
     bool evaluate()
@@ -102,9 +111,24 @@ class always: public connector
         // bool something=left->evaluate();
         if(right->evaluate())
         {
-            successful = true;
+            success();
         }
 
+        return successful;
+    }
+};
+
+class exit: public connector
+{
+    public:
+    exit() : connector()
+    {
+        //constructor
+    }
+
+    bool evaluate()
+    {
+        exit(0);
         return successful;
     }
 };
@@ -112,13 +136,13 @@ class always: public connector
 class commands: public connector
 {
     public:
-        string command;
-        commands(string &com)
-	{
-	    left = NULL;
-	    right = NULL;
-	    command = com;		
-	}
+    string command;
+    commands(string &com)
+    {
+	left = NULL;
+	right = NULL;
+	command = com;		
+    }
 
     bool evaluate()
     {
@@ -127,10 +151,12 @@ class commands: public connector
 	boost::char_separator<char> sep(" ");
 	tokenizer tokens(command, sep);
 	vector<string> v;
+
 	for (tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter)
 	{
 	    v.push_back(*tok_iter);
 	}
+
 	unsigned size = v.size() + 1;
         char **args = new char*[size];
 	args[size - 1] = 0;
@@ -144,21 +170,22 @@ class commands: public connector
 	int status;
 	pid_t pid;
 	pid = fork();
-	if (pid < 0)
+	
+        if (pid < 0)
 	{
 	    perror("Fork Failed");
-	    successful = false;
+	    failure();
 	}
 	else if(pid == 0)
 	{
 	    if (execvp(args[0], args) < 0)
 	    {
 		perror("-bash");
-		successful =  false;
+		failure();
 	    }
 	    else
 	    {
-		successful = true;
+		success();
 	    }
 	}
 	else
@@ -167,7 +194,7 @@ class commands: public connector
 	    {
 		perror("wait");
 	    }
-	    successful = true;
+	    success();
 	}
         return successful;
     }
