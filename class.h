@@ -16,7 +16,7 @@ using namespace std;
 
 class connector
 {
-    private:
+    public:
         connector* left;
         connector* right;
         bool successful;
@@ -35,105 +35,99 @@ class connector
 	{	
             right = c;
         }
-        void success()
-        {
-            successful=true;
-        }
-        void failure()
-        {
-            successful=false;
-        }
 };
 
-class ampersand: public connector
+class ampersand : public connector
 {
     public:
     ampersand() : connector()
     {
-        //constructor
     }
 
     bool evaluate()
     {
-        bool doleft=left->evaluate();
-       	bool doright=false;
-        if(doleft)
+        if(left->evaluate())
         {
-            doright=right->evaluate();
+            if (right->evaluate())
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
-
-        if(doright)
+        else
         {
-            success();
+            return false;   
         }
-
-        return successful;
     }
 };
 
-class pipe: public connector
+class pipes : public connector
 {
     public:
-    pipe() : connector()
+    pipes() : connector()
     {
-        //constructor
     }
 
     bool evaluate()
     {
-        bool doleft=left->evaluate();
-        bool doright;
-        if(!doleft)
+        if(!(left->evaluate()))
         {
-            doright=right->evaluate();
+            if (right->evaluate())
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
-
-        if(doright || doleft)
+        else
         {
-            success();
+            return true;
         }
-
-        return successful;
     }
 };
 
-class always: public connector
+class always : public connector
 {
     public:
     always() : connector()
     {
-        //constructful = true;or
     }
 
     bool evaluate()
     {
-        bool doleft=left->evaluate();
-        // bool something=left->evaluate();
-        if(right->evaluate())
+        left->evaluate();
+        bool didRightExecute = right->evaluate();
+        if (didRightExecute)
         {
-            success();
+            return  true;
         }
-
-        return successful;
+        else
+        {
+            return false;
+        }
     }
 };
 
-class exit: public connector
+class terminator : public connector
 {
     public:
-    exit() : connector()
+    terminator() : connector()
     {
-        //constructor
     }
 
     bool evaluate()
     {
         exit(0);
-        return successful;
+        return true;
     }
 };
 
-class commands: public connector
+class commands : public connector
 {
     public:
     string command;
@@ -146,7 +140,6 @@ class commands: public connector
 
     bool evaluate()
     {
-        //execvp goes here
         typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
 	boost::char_separator<char> sep(" ");
 	tokenizer tokens(command, sep);
@@ -174,29 +167,27 @@ class commands: public connector
         if (pid < 0)
 	{
 	    perror("Fork Failed");
-	    failure();
+            return false;
 	}
 	else if(pid == 0)
 	{
 	    if (execvp(args[0], args) < 0)
 	    {
 		perror("-bash");
-		failure();
+                return false;
 	    }
 	    else
 	    {
-		success();
+                return true;
 	    }
 	}
 	else
 	{
 	    while (wait(&status) != pid)
 	    {
-		perror("wait");
 	    }
-	    success();
+            return true;
 	}
-        return successful;
     }
 };
 
