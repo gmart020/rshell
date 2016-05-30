@@ -149,45 +149,109 @@ class commands : public connector
 	{
 	    v.push_back(*tok_iter);
 	}
+        if (v.at(0) == "test" || v.at(0) == "[")
+        {
+            struct stat sb;
+            if (v.at(1) == "-e" || v.at(1) == "-f" || v.at(1) == "-d")
+            {
+                stat(v.at(2).c_str(), &sb);
+                if (v.at(1) == "-e")
+                {
+                    if (S_ISREG(sb.st_mode) || S_ISDIR(sb.st_mode))
+                    {
+                        cout << "(True)" << endl;
+                        return true;
+                    }
+                    else
+                    {
+                        cout << "(False)" << endl;
+                        return false;
+                    }
+                }
+                if (v.at(1) == "-d")
+                {
+                    if (S_ISDIR(sb.st_mode))
+                    {
+                        cout << "(True)" << endl;
+                        return true;
+                    }
+                    else
+                    {
+                        cout << "(False)" << endl;
+                        return false;
+                    }
+                }
+                if (v.at(1) == "-f")
+                {
+                    if (S_ISREG(sb.st_mode))
+                    {
+                        cout << "(True)" << endl;
+                        return true;
+                    }
+                    else
+                    {
+                        cout << "(False)" << endl;
+                        return false;
+                    }
+                }
+            }   
+            else
+            {
+                stat(v.at(1).c_str(), &sb);
+                if (S_ISREG(sb.st_mode) || S_ISDIR(sb.st_mode))
+                {
+                    cout << "(True)" << endl;
+                    return true;
+                }
+                else
+                {
+                    cout << "(False)" << endl;
+                    return false;
+                }
+            }
+        }
+        else
+        {
+	    unsigned size = v.size() + 1;
+            char **args = new char*[size];
+	    args[size - 1] = 0;
 
-	unsigned size = v.size() + 1;
-        char **args = new char*[size];
-	args[size - 1] = 0;
-
-	for (unsigned i = 0; i < size - 1; ++i)
-	{
-	    const char *mystr = v.at(i).c_str();
-	    args[i] = const_cast<char *> (&mystr[0]);
-	}
-
-	int status;
-	pid_t pid;
-	pid = fork();
-	
-        if (pid < 0)
-	{
-	    perror("Fork Failed");
-            return false;
-	}
-	else if(pid == 0)
-	{
-	    if (execvp(args[0], args) < 0)
+	    for (unsigned i = 0; i < size - 1; ++i)
 	    {
-		perror("-bash");
+	        const char *mystr = v.at(i).c_str();
+	        args[i] = const_cast<char *> (&mystr[0]);
+	    }
+
+	    int status;
+	    pid_t pid;
+	    pid = fork();
+	
+            if (pid < 0)
+	    {
+	        perror("Fork Failed");
                 return false;
+	    }
+    	    else if(pid == 0)
+	    {
+	        if (execvp(args[0], args) < 0)
+	        {
+		    perror("-bash");
+                    return false;
+	        }
+	        else
+	        {
+                    return true;
+	        }
 	    }
 	    else
 	    {
+	        while (wait(&status) != pid)
+	        {
+	        }
                 return true;
 	    }
-	}
-	else
-	{
-	    while (wait(&status) != pid)
-	    {
-	    }
-            return true;
-	}
+        }
+        return true;
     }
 };
 
