@@ -1,0 +1,3 @@
+(echo test1 && echo test2) && echo test3
+(asasaadf || echo test4) && (echo test5 && echo test6) && echo test7
+exit

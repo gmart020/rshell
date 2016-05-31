@@ -1,0 +1,7 @@
+test -e test/test.txt && echo "exists"
+test -f test/test.txt && echo "file exists"
+test -d test/test.txt && echo "path exists"
+test -e test/ && echo "exists"
+test -f test/ && echo "file exists"
+test -d test/ && echo "path exists"
+exit

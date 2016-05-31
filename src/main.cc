@@ -231,8 +231,12 @@ int main()
     {
         cout << getlogin() << "@" << HOSTNAME << "$ ";
         getline(cin, input);
-        connector *c = createTree(input);
-        c->evaluate();
+
+        if(input!="")
+        {
+            connector *c = createTree(input);
+            c->evaluate();
+        }
     }
     return 0;
 }
