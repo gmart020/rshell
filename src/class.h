@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <boost/tokenizer.hpp>
+#include <fstream>
 
 using namespace std;
 
@@ -19,12 +20,10 @@ class connector
     public:
         connector* left;
         connector* right;
-        bool successful;
     
     public:
         connector()
         {
-            successful = false;
         }
         virtual bool evaluate() = 0;
         void addLeft(connector* c)
@@ -113,6 +112,29 @@ class always : public connector
     }
 };
 
+//to be done
+class pipe : public connector
+{
+    public:
+    pipe() : connector()
+    {
+    }
+
+    bool evaluate()
+    {
+        left->evaluate();
+        bool didRightExecute = right->evaluate();
+        if (didRightExecute)
+        {
+            return  true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+};
+
 class terminator : public connector
 {
     public:
@@ -135,7 +157,7 @@ class commands : public connector
     {
 	left = NULL;
 	right = NULL;
-	command = com;		
+	command = com;
     }
 
     bool evaluate()
@@ -252,6 +274,68 @@ class commands : public connector
 	    }
         }
         return true;
+    }
+};
+
+class inout : public connector
+{
+    public:
+    string file;
+    fstream fs;
+    inout(string &x)
+    {
+        file=x;
+        right=NULL;
+    }
+
+    virtual bool evaluate() = 0;
+};
+
+//to be done
+class input : public inout
+{
+    public
+    input(string &x) : inout(x)
+    {
+    }
+
+    bool evaluate()
+    {
+        fs.open(file);
+
+        fs.close();
+    }
+};
+
+//to be done
+class output : public inout
+{
+    public
+    output(string &x) : inout(x)
+    {
+    }
+
+    bool evaluate()
+    {
+        fs.open(file);
+
+        fs.close();
+    }
+};
+
+//to be done
+class append : public inout
+{
+    public
+    append(string &x) : inout(x)
+    {
+    }
+
+    bool evaluate()
+    {
+        fs.open(file);
+
+        fs.close();
     }
 };
 
