@@ -112,29 +112,6 @@ class always : public connector
     }
 };
 
-//to be done
-class pipe : public connector
-{
-    public:
-    pipe() : connector()
-    {
-    }
-
-    bool evaluate()
-    {
-        left->evaluate();
-        bool didRightExecute = right->evaluate();
-        if (didRightExecute)
-        {
-            return  true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-};
-
 class terminator : public connector
 {
     public:
@@ -163,14 +140,14 @@ class commands : public connector
     bool evaluate()
     {
         typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
-	boost::char_separator<char> sep(" ");
-	tokenizer tokens(command, sep);
-	vector<string> v;
+        boost::char_separator<char> sep(" ");
+        tokenizer tokens(command, sep);
+        vector<string> v;
 
-	for (tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter)
-	{
-	    v.push_back(*tok_iter);
-	}
+        for (tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter)
+        {
+            v.push_back(*tok_iter);
+        }
         if (v.at(0) == "test" || v.at(0) == "[")
         {
             struct stat sb;
@@ -234,108 +211,46 @@ class commands : public connector
         }
         else
         {
-	    unsigned size = v.size() + 1;
+            unsigned size = v.size() + 1;
             char **args = new char*[size];
-	    args[size - 1] = 0;
+            args[size - 1] = 0;
 
-	    for (unsigned i = 0; i < size - 1; ++i)
-	    {
-	        const char *mystr = v.at(i).c_str();
-	        args[i] = const_cast<char *> (&mystr[0]);
-	    }
+            for (unsigned i = 0; i < size - 1; ++i)
+            {
+                const char *mystr = v.at(i).c_str();
+                args[i] = const_cast<char *> (&mystr[0]);
+            }
 
-	    int status;
-	    pid_t pid;
-	    pid = fork();
-	
+            int status;
+            pid_t pid;
+            pid = fork();
+
             if (pid < 0)
-	    {
-	        perror("Fork Failed");
+            {
+                perror("Fork Failed");
                 return false;
-	    }
-    	    else if(pid == 0)
-	    {
-	        if (execvp(args[0], args) < 0)
-	        {
-		    perror("-bash");
+            }
+            else if(pid == 0)
+            {
+                if (execvp(args[0], args) < 0)
+                {
+                    perror("-bash");
                     return false;
-	        }
-	        else
-	        {
+                }
+                else
+                {
                     return true;
-	        }
-	    }
-	    else
-	    {
-	        while (wait(&status) != pid)
-	        {
-	        }
+                }
+            }
+            else
+            {
+                while (wait(&status) != pid)
+                {
+                }
                 return true;
-	    }
+                }
         }
         return true;
-    }
-};
-
-class inout : public connector
-{
-    public:
-    string file;
-    fstream fs;
-    inout(string &x)
-    {
-        file=x;
-        right=NULL;
-    }
-
-    virtual bool evaluate() = 0;
-};
-
-//to be done
-class input : public inout
-{
-    public
-    input(string &x) : inout(x)
-    {
-    }
-
-    bool evaluate()
-    {
-        fs.open(file);
-
-        fs.close();
-    }
-};
-
-//to be done
-class output : public inout
-{
-    public
-    output(string &x) : inout(x)
-    {
-    }
-
-    bool evaluate()
-    {
-        fs.open(file);
-
-        fs.close();
-    }
-};
-
-//to be done
-class append : public inout
-{
-    public
-    append(string &x) : inout(x)
-    {
-    }
-
-    bool evaluate()
-    {
-        fs.open(file);
-
-        fs.close();
     }
 };
 
