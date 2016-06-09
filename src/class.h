@@ -184,9 +184,9 @@ class commands : public connector
             else if(pid == 0)
             {
                 dup2(fd_in, 0);
-                if(v[j+1] != NULL)
+                if(j<v.size()-1)
                 {
-                    dup2(p[1], [1]);
+                    dup2(p[1], 1);
                 }
                 close(p[0]);
                 execvp(args[0], args);
