@@ -140,115 +140,64 @@ class commands : public connector
     bool evaluate()
     {
         typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
-        boost::char_separator<char> sep(" ");
+        boost::char_separator<char> sep("|");
         tokenizer tokens(command, sep);
-        vector<string> v;
+        vector<vector<string> > v;
 
         for (tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter)
         {
-            v.push_back(*tok_iter);
-        }
-        if (v.at(0) == "test" || v.at(0) == "[")
-        {
-            struct stat sb;
-            if (v.at(1) == "-e" || v.at(1) == "-f" || v.at(1) == "-d")
+            typedef boost::tokenizer<boost::char_separator<char> > tokenizerSpace;
+            boost::char_separator<char> sepSpace(" ");
+            tokenizer tokensSpace(*tok_iter, sepSpace);
+            vector<string> vSpace;
+
+            for (tokenizer::iterator space_iter = tokensSpace.begin(); space_iter != tokensSpace.end(); ++space_iter)
             {
-                stat(v.at(2).c_str(), &sb);
-                if (v.at(1) == "-e")
-                {
-                    if (S_ISREG(sb.st_mode) || S_ISDIR(sb.st_mode))
-                    {
-                        cout << "(True)" << endl;
-                        return true;
-                    }
-                    else
-                    {
-                        cout << "(False)" << endl;
-                        return false;
-                    }
-                }
-                if (v.at(1) == "-d")
-                {
-                    if (S_ISDIR(sb.st_mode))
-                    {
-                        cout << "(True)" << endl;
-                        return true;
-                    }
-                    else
-                    {
-                        cout << "(False)" << endl;
-                        return false;
-                    }
-                }
-                if (v.at(1) == "-f")
-                {
-                    if (S_ISREG(sb.st_mode))
-                    {
-                        cout << "(True)" << endl;
-                        return true;
-                    }
-                    else
-                    {
-                        cout << "(False)" << endl;
-                        return false;
-                    }
-                }
-            }   
-            else
-            {
-                stat(v.at(1).c_str(), &sb);
-                if (S_ISREG(sb.st_mode) || S_ISDIR(sb.st_mode))
-                {
-                    cout << "(True)" << endl;
-                    return true;
-                }
-                else
-                {
-                    cout << "(False)" << endl;
-                    return false;
-                }
+                vSpace.push_back(*space_iter);
             }
+
+            v.push_back(vSpace);
         }
-        else
+
+        int p[2];
+        pid_t pid;
+        int fd_in = 0;
+
+        for(unsigned j = 0; j < v.size(); j++)
         {
-            unsigned size = v.size() + 1;
+            unsigned size = v[j].size() + 1;
             char **args = new char*[size];
             args[size - 1] = 0;
 
             for (unsigned i = 0; i < size - 1; ++i)
             {
-                const char *mystr = v.at(i).c_str();
+                const char *mystr = v[j].at(i).c_str();
                 args[i] = const_cast<char *> (&mystr[0]);
             }
 
-            int status;
-            pid_t pid;
-            pid = fork();
-
-            if (pid < 0)
+            pipe(p);
+            if((pid=fork()) < -1)
             {
                 perror("Fork Failed");
                 return false;
             }
             else if(pid == 0)
             {
-                if (execvp(args[0], args) < 0)
+                dup2(fd_in, 0);
+                if(v[j+1] != NULL)
                 {
-                    perror("-bash");
-                    return false;
+                    dup2(p[1], [1]);
                 }
-                else
-                {
-                    return true;
-                }
+                close(p[0]);
+                execvp(args[0], args);
+                exit(0);
             }
             else
             {
-                while (wait(&status) != pid)
-                {
-                }
-                return true;
-                }
+                wait(NULL);
+                close(p[1]);
+                fd_in = p[0];
+            }
         }
         return true;
     }
