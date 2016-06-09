@@ -6,3 +6,5 @@ In order to use the shell, run the executable. A commmand prompt will be printed
 
 #Bugs
 The parsing function works by splitting the inputed string into substrings until each substring contains a single command without any connectors. However since we approached the parsing this way, the program requires the user to input the commands in the correct format (command, connector, command). Ending a command with a connector will cause the program to abort. Inputing extra unnecessary parenthesis will also cause it to abort. For example, (((((echo a))))), will cause an error. If parenthesis are not paired, it will also cause an error. In case of an error, the program must be restarted.
+
+Only piping implemented. Input and output redirection not implemented.
